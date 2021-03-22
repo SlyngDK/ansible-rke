@@ -1,0 +1,22 @@
+---
+- name: 'Check `cluster_name` variable is defined'
+  assert:
+    that:
+      - cluster_name is defined
+
+- name: 'Check `rke_node_roles` variable is defined and none empty'
+  assert:
+    that:
+      - rke_node_roles is defined
+      - rke_node_roles | length > 0
+
+- name: Prepare RKE installer
+  include_tasks: rke-prepare.yml
+  when: inventory_hostname == rke_controller_hostname
+
+- name: Install prerequisites on all hosts
+  include_tasks: prerequisites.yml
+
+- name: Run RKE installer
+  include_tasks: rke.yml
+  when: inventory_hostname == rke_controller_hostname

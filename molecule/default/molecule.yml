@@ -1,0 +1,33 @@
+---
+dependency:
+  name: galaxy
+driver:
+  name: vagrant
+platforms:
+  - name: master
+    box: generic/debian10
+    memory: 4096
+    cpus: 4
+    interfaces:
+      - network_name: private_network
+        ip: '192.168.33.71'
+  - name: worker
+    box: generic/debian10
+    memory: 4096
+    cpus: 4
+    interfaces:
+      - network_name: private_network
+        ip: '192.168.33.72'
+provisioner:
+  name: ansible
+  inventory:
+    host_vars:
+      master:
+        rke_node_roles:
+          - controlplane
+          - etcd
+      worker:
+        rke_node_roles:
+          - worker
+verifier:
+  name: ansible

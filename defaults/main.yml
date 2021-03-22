@@ -1,0 +1,52 @@
+---
+# Map of Kubernetes minor version to RKE Kubernetes version
+kubernetes_supported_versions:
+  "1.19": v1.19.6-rancher1-1
+  "1.18": v1.18.14-rancher1-1
+  "1.17": v1.17.16-rancher1-1
+
+# Default Kubernetes minor version
+kubernetes_version: "1.19"
+
+rke_release: v1.2.4
+rke_binary_url: "https://github.com/rancher/rke/releases/download/{{ rke_release }}/rke_linux-amd64"
+rke_binary_checksum: sha256:3981fef5251cfb68fccca4fbbd265cafd3db5bbcbc1089e526c68bd4363ce048
+rke_kubernetes_version: "{{ kubernetes_supported_versions[kubernetes_version] }}"
+
+rke_config_dir: "{{ ansible_env.HOME | default(ansible_env.PWD) | default('/root') }}/rke"
+
+# This is the host that will run 'rke up'
+# By default, use the first host in the play
+rke_controller_hostname: "{{ ansible_play_hosts[0] }}"
+
+cluster_interface: "{{ ansible_default_ipv4.interface }}"
+cluster_cidr: "{{ [ansible_facts[cluster_interface].ipv4.network, ansible_facts[cluster_interface].ipv4.netmask] | join('/') | ipaddr('net') }}"
+
+rke_node_roles: []
+rke_force_configure: false
+
+rke_network_config:
+  plugin: canal
+  options:
+    canal_iface: "{{ cluster_interface }}"
+
+manifests_dir: "{{ ansible_env.HOME | default(ansible_env.PWD) | default('/root') }}/manifests"
+
+# Docker
+docker_edition: 'ce'
+# docker_version: "ce=5:19.03.15~3-0~debian-buster"
+docker_version: "19.03"
+docker_package: "docker-{{ docker_edition }}"
+docker_package_state: present
+
+# Service options.
+docker_service_state: started
+docker_service_enabled: true
+docker_restart_handler_state: restarted
+docker_restart_allowed: false
+
+
+docker_apt_arch: amd64
+docker_apt_repository: "deb [arch={{ docker_apt_arch }}] https://download.docker.com/linux/{{ ansible_distribution | lower }} {{ ansible_distribution_release }} stable"
+docker_apt_ignore_key_error: true
+docker_apt_gpg_key: https://download.docker.com/linux/{{ ansible_distribution | lower }}/gpg

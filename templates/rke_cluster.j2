@@ -1,0 +1,26 @@
+---
+
+cluster_name: "{{ cluster_name }}"
+
+kubernetes_version: "{{ rke_kubernetes_version }}"
+
+ssh_key_path: "{{ rke_config_dir }}/ssh_id_rsa"
+
+{% if docker_version == 'latest' %}
+ignore_docker_version: true
+{% endif %}
+
+nodes:
+{% for host in ansible_play_hosts %}
+  - hostname_override: "{{ hostvars[host].ansible_hostname }}"
+    address: "{{ hostvars[host]['ansible_' + cluster_interface].ipv4.address }}"
+    user: rke
+    role:
+      {{ hostvars[host].rke_node_roles | to_nice_yaml(indent=2) | indent(width=6) }}
+{% endfor %}
+
+network:
+  {{ rke_network_config | to_nice_yaml(indent=2) | indent(width=2) }}
+
+ingress:
+  provider: none

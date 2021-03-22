@@ -1,0 +1,100 @@
+---
+- name: Ensure old versions of Docker are not installed.
+  package:
+    name:
+      - docker
+      - docker-engine
+    state: absent
+
+- name: Ensure dependencies are installed.
+  apt:
+    name:
+      - apt-transport-https
+      - ca-certificates
+      - gnupg2
+    state: present
+
+- name: Add Docker apt key.
+  apt_key:
+    url: "{{ docker_apt_gpg_key }}"
+    id: 9DC858229FC7DD38854AE2D88D81803C0EBFCD88
+    state: present
+  register: add_repository_key
+  ignore_errors: "{{ docker_apt_ignore_key_error }}"
+
+- name: Ensure curl is present (on older systems without SNI).
+  package: name=curl state=present
+  when: add_repository_key is failed
+
+- name: Add Docker apt key (alternative for older systems without SNI).
+  shell: >
+    curl -sSL {{ docker_apt_gpg_key }} | sudo apt-key add -
+  args:
+    warn: false
+  when: add_repository_key is failed
+
+- name: Add Docker repository.
+  apt_repository:
+    repo: "{{ docker_apt_repository }}"
+    state: present
+    update_cache: true
+
+- name: Get docker version to install from regex
+  shell: set -o pipefail && apt-cache policy docker-ce | grep -o -e "[0-9a-z\:]*{{ docker_version | replace('.','\.') }}[0-9\~a-z\.\-]*" | head -n 1
+  args:
+    executable: /bin/bash
+  register: docker_version_match
+  when: docker_version != 'latest'
+  changed_when: false
+
+- name: Set docker version from regex match
+  set_fact: 
+    docker_version: "={{ docker_version_match.stdout }}"
+  when: docker_version_match.rc == 0
+
+- name: Get current installed docker version
+  shell: set -o pipefail && apt-cache policy docker-ce | grep "Installed:" | grep -o -e "[:0-9\~a-z\.\-]*" | tail -n 1
+  args:
+    executable: /bin/bash
+  register: docker_version_current
+  changed_when: false
+
+- name: Get current installed docker version
+  shell: set -o pipefail && apt-cache policy docker-ce | grep "Candidate:" | grep -o -e "[:0-9\~a-z\.\-]*" | tail -n 1
+  args:
+    executable: /bin/bash
+  register: docker_version_candidate
+  changed_when: false
+
+- name: Allow {{ docker_package }} to being upgraded
+  dpkg_selections:
+    name: "{{ docker_package }}"
+    selection: install
+  when: |
+    (docker_version == 'latest' and docker_version_current.stdout != docker_version_candidate.stdout) 
+    or (docker_version != 'latest' and '=' + docker_version_current.stdout != docker_version)
+
+- name: Clear docker version when running with latest
+  set_fact: 
+    docker_version: ""
+  when: docker_version == 'latest'
+
+- name: Install Docker.
+  apt:
+    name: "{{ docker_package }}{{ docker_version }}"
+  notify: restart docker
+
+- name: Prevent {{ docker_package }} from being upgraded
+  dpkg_selections:
+    name: "{{ docker_package }}"
+    selection: hold
+  when: docker_version != 'latest'
+
+- name: Ensure Docker is started and enabled at boot.
+  service:
+    name: docker
+    state: "{{ docker_service_state }}"
+    enabled: "{{ docker_service_enabled }}"
+
+- name: Ensure handlers are notified now to avoid firewall conflicts.
+  meta: flush_handlers

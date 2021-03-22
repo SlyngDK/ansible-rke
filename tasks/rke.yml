@@ -1,0 +1,69 @@
+---
+- name: Get current installet version of RKE binary
+  shell: "rke -v | awk '{ print $3 }' || true"
+  register: rke_binary_version
+  changed_when: false
+
+- name: Download RKE binary
+  get_url:
+    url: "{{ rke_binary_url }}"
+    checksum: "{{ rke_binary_checksum }}"
+    dest: /usr/local/bin/rke
+    mode: "+rx"
+    force: "{{ rke_binary_version.stdout != rke_release }}"
+  register: rke_binary
+  become: yes
+
+- name: Ensure config directory exists
+  file:
+    path: "{{ rke_config_dir }}"
+    state: directory
+    mode: '700'
+
+- name: Create/update RKE config file
+  template:
+    src: rke_cluster.j2
+    dest: "{{ rke_config_dir }}/cluster.yml"
+    mode: '600'
+  register: rke_cluster_config
+
+- name: Check RUNNING file
+  stat:
+    path: "{{ rke_config_dir }}/RUNNING"
+  register: running
+
+- name: Run RKE installer
+  shell: |
+    set -eo pipefail
+    touch RUNNING
+    rke up | tee rke-up_$(date +%Y-%m-%d_%H%M%S).log
+    rm -f RUNNING
+  args:
+    chdir: "{{ rke_config_dir }}"
+    executable: /usr/bin/bash
+  when: rke_binary is changed or rke_cluster_config is changed or rke_force_configure or running.stat.exists
+
+- name: Install kubectl
+  get_url:
+    url: https://storage.googleapis.com/kubernetes-release/release/{{ rke_kubernetes_version.split('-', 1)[0] }}/bin/linux/amd64/kubectl
+    dest: /usr/local/bin/kubectl
+    force: yes
+    mode: "+rx"
+  become: yes
+
+- name: Ensure $HOME/.kube exists
+  file:
+    path: "{{ ansible_env.HOME }}/.kube"
+    state: directory
+    mode: '700'
+
+- name: Copy kubeconfig to default location
+  copy:
+    remote_src: yes
+    src: "{{ rke_config_dir }}/kube_config_cluster.yml"
+    dest: "{{ ansible_env.HOME }}/.kube/config"
+    mode: '600'
+
+- name: Verify kubectl working
+  shell: kubectl get all
+  changed_when: false

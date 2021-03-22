@@ -1,0 +1,16 @@
+---
+- name: Ensure config directory exists
+  file:
+    path: "{{ rke_config_dir }}"
+    state: directory
+    mode: '700'
+
+- name: Generate ssh-key to use by rke
+  community.crypto.openssh_keypair:
+    path: "{{ rke_config_dir }}/ssh_id_rsa"
+
+- name: Get public ssh-key to use by rke
+  ansible.builtin.fetch:
+    src: "{{ rke_config_dir }}/ssh_id_rsa.pub"
+    dest: /tmp/rke/
+    flat: yes
