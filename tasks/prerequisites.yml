@@ -2,7 +2,7 @@
 - name: Install docker
   include_tasks: docker.yml
   vars:
-    ansible_become: yes
+    ansible_become: true
 
 - name: Create sysctl settings file for bridge settings
   copy:
@@ -12,12 +12,12 @@
       net.bridge.bridge-nf-call-iptables = 1
     mode: '644'
   register: sysctl_k8s_conf
-  become: yes
+  become: true
 
 - name: Load new sysctl settings
   command: sysctl --system
   when: sysctl_k8s_conf is changed
-  become: yes
+  become: true
 
 - name: Remove swap volumes from /etc/fstab
   lineinfile:
@@ -26,32 +26,32 @@
     # This should match all lines with an fstype of "swap"
     regexp: '^[^\s]+\s+[^\s]+\s+swap\s+'
   register: remove_swap_volumes
-  become: yes
+  become: true
 
 - name: Disable swap
   command: swapoff --all
   when: remove_swap_volumes is changed
-  become: yes
+  become: true
 
 - name: Create rke group
   group:
     name: rke
-    system: yes
-  become: yes
+    system: true
+  become: true
 
 - name: Add rke user
   user:
     name: rke
     comment: "Rancher RKE"
-    system: yes
+    system: true
     group: rke
     groups:
       - docker
-  become: yes
+  become: true
 
 - name: Setup ssh authorized key for rke
   authorized_key:
     user: rke
-    exclusive: yes
+    exclusive: true
     key: "{{ lookup('file', '/tmp/rke/ssh_id_rsa.pub') }}"
-  become: yes
+  become: true

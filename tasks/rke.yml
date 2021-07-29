@@ -12,15 +12,15 @@
     mode: "+rx"
     force: "{{ rke_binary_version.stdout != rke_release }}"
   register: rke_binary
-  become: yes
+  become: true
 
 - name: Install kubectl
   get_url:
     url: https://storage.googleapis.com/kubernetes-release/release/{{ rke_kubernetes_version.split('-', 1)[0] }}/bin/linux/amd64/kubectl
     dest: /usr/local/bin/kubectl
-    force: yes
+    force: true
     mode: "+rx"
-  become: yes
+  become: true
 
 - name: Ensure config directory exists
   file:
@@ -62,7 +62,7 @@
 
 - name: Copy kubeconfig to default location
   copy:
-    remote_src: yes
+    remote_src: true
     src: "{{ rke_config_dir }}/kube_config_cluster.yml"
     dest: "{{ ansible_env.HOME }}/.kube/config"
     mode: '600'

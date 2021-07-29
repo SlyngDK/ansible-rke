@@ -13,4 +13,4 @@
   ansible.builtin.fetch:
     src: "{{ rke_config_dir }}/ssh_id_rsa.pub"
     dest: /tmp/rke/
-    flat: yes
+    flat: true

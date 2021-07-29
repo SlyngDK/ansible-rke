@@ -27,7 +27,7 @@ galaxy_info:
       versions:
         - buster
 
-  galaxy_tags: 
+  galaxy_tags:
     - rke
     - rancher
     - kubernetes

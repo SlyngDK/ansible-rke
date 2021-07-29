@@ -24,5 +24,3 @@ rules:
   line-length: disable
   new-lines:
     type: unix
-  trailing-spaces: disable
-  truthy: disable

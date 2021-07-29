@@ -48,7 +48,7 @@
   changed_when: false
 
 - name: Set docker version from regex match
-  set_fact: 
+  set_fact:
     docker_version: "={{ docker_version_match.stdout }}"
   when: docker_version_match.rc == 0
 
@@ -71,11 +71,11 @@
     name: "{{ docker_package }}"
     selection: install
   when: |
-    (docker_version == 'latest' and docker_version_current.stdout != docker_version_candidate.stdout) 
+    (docker_version == 'latest' and docker_version_current.stdout != docker_version_candidate.stdout)
     or (docker_version != 'latest' and '=' + docker_version_current.stdout != docker_version)
 
 - name: Clear docker version when running with latest
-  set_fact: 
+  set_fact:
     docker_version: ""
   when: docker_version == 'latest'
 
