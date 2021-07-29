@@ -14,11 +14,22 @@
   register: rke_binary
   become: yes
 
+- name: Install kubectl
+  get_url:
+    url: https://storage.googleapis.com/kubernetes-release/release/{{ rke_kubernetes_version.split('-', 1)[0] }}/bin/linux/amd64/kubectl
+    dest: /usr/local/bin/kubectl
+    force: yes
+    mode: "+rx"
+  become: yes
+
 - name: Ensure config directory exists
   file:
     path: "{{ rke_config_dir }}"
     state: directory
     mode: '700'
+
+- include: "{{ rke_before_up_hook | default('empty.yml') }}"
+  register: include_rke_before_up_hook
 
 - name: Create/update RKE config file
   template:
@@ -41,15 +52,7 @@
   args:
     chdir: "{{ rke_config_dir }}"
     executable: /usr/bin/bash
-  when: rke_binary is changed or rke_cluster_config is changed or rke_force_configure or running.stat.exists
-
-- name: Install kubectl
-  get_url:
-    url: https://storage.googleapis.com/kubernetes-release/release/{{ rke_kubernetes_version.split('-', 1)[0] }}/bin/linux/amd64/kubectl
-    dest: /usr/local/bin/kubectl
-    force: yes
-    mode: "+rx"
-  become: yes
+  when: rke_binary is changed or rke_cluster_config is changed or rke_force_configure or running.stat.exists or include_rke_before_up_hook is changed
 
 - name: Ensure $HOME/.kube exists
   file:
