@@ -15,6 +15,8 @@ rke_binary_checksum: sha256:dbc3a659c333b1dcd54721b065156b46241e87724592e6c1db4c
 rke_kubernetes_version: "{{ kubernetes_supported_versions[kubernetes_version] }}"
 
 rke_config_dir: "{{ ansible_env.HOME | default(ansible_env.PWD) | default('/root') }}/rke"
+rke_ssh_key_private: ""
+rke_ssh_key_public: ""
 
 # This is the host that will run 'rke up'
 # By default, use the first host in the play

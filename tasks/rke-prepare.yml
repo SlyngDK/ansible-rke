@@ -8,6 +8,27 @@
 - name: Generate ssh-key to use by rke
   community.crypto.openssh_keypair:
     path: "{{ rke_config_dir }}/ssh_id_rsa"
+  when: rke_ssh_key_private | length == 0 or rke_ssh_key_public | length == 0
+
+- name: Save provided ssh private key
+  ansible.builtin.copy:
+    content: "{{ rke_ssh_key_private }}"
+    dest: "{{ rke_config_dir }}/ssh_id_rsa"
+  when: rke_ssh_key_private | length > 0 and rke_ssh_key_public | length > 0
+
+- name: Save provided ssh public key
+  ansible.builtin.copy:
+    content: "{{ rke_ssh_key_public }}"
+    dest: "{{ rke_config_dir }}/ssh_id_rsa.pub"
+  when: rke_ssh_key_private | length > 0 and rke_ssh_key_public | length > 0
+
+- name: Test ssh accesses
+  ansible.builtin.shell:
+    cmd: |
+      ssh -o BatchMode=yes rke@{{ hostvars[host]['ansible_' + host_interface].ipv4.address }} true
+    chdir: "{{ rke_config_dir }}"
+  when: hostvars[item].rke_node_roles | length > 0
+  with_items: "{{ ansible_play_hosts }}"
 
 - name: Get public ssh-key to use by rke
   ansible.builtin.fetch:
