@@ -25,7 +25,7 @@
 - name: Test ssh accesses
   ansible.builtin.shell:
     cmd: |
-      ssh -o BatchMode=yes rke@{{ hostvars[host]['ansible_' + host_interface].ipv4.address }} true
+      ssh -o BatchMode=yes rke@{{ hostvars[item]['ansible_' + host_interface].ipv4.address }} true
     chdir: "{{ rke_config_dir }}"
   when: hostvars[item].rke_node_roles | length > 0
   with_items: "{{ ansible_play_hosts }}"
