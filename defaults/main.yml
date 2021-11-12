@@ -1,17 +1,17 @@
 ---
 # Map of Kubernetes minor version to RKE Kubernetes version
 kubernetes_supported_versions:
-  "1.20": v1.20.8-rancher1-1
-  "1.19": v1.19.12-rancher1-1
+  "1.21": v1.21.6-rancher1-1
+  "1.20": v1.20.12-rancher1-1
+  "1.19": v1.19.16-rancher1-1
   "1.18": v1.18.20-rancher1-2
-  "1.17": v1.17.17-rancher1-3
 
 # Default Kubernetes minor version
-kubernetes_version: "1.20"
+kubernetes_version: "1.21"
 
-rke_release: v1.2.9
+rke_release: v1.3.2
 rke_binary_url: "https://github.com/rancher/rke/releases/download/{{ rke_release }}/rke_linux-amd64"
-rke_binary_checksum: sha256:dbc3a659c333b1dcd54721b065156b46241e87724592e6c1db4c5d1ea05bc606
+rke_binary_checksum: sha256:11c2534a97d24c9ad8148c10b344cfbd0ec220c9bd18bf00d55cb508f6fb5403
 rke_kubernetes_version: "{{ kubernetes_supported_versions[kubernetes_version] }}"
 
 rke_config_dir: "{{ ansible_env.HOME | default(ansible_env.PWD) | default('/root') }}/rke"
@@ -19,6 +19,8 @@ rke_config_dir: "{{ ansible_env.HOME | default(ansible_env.PWD) | default('/root
 # This is the host that will run 'rke up'
 # By default, use the first host in the play
 rke_controller_hostname: "{{ ansible_play_hosts[0] }}"
+
+rke_node_hostname_override:
 
 cluster_interface: "{{ ansible_default_ipv4.interface }}"
 host_interface: "{{ cluster_interface }}"

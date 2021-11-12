@@ -12,7 +12,7 @@ ignore_docker_version: true
 
 nodes:
 {% for host in ansible_play_hosts %}
-  - hostname_override: "{{ hostvars[host].ansible_hostname }}"
+  - hostname_override: "{{ hostvars[host].rke_node_hostname_override | default(hostvars[host].ansible_hostname, true) }}"
     address: "{{ hostvars[host]['ansible_' + host_interface].ipv4.address }}"
     internal_address: "{{ hostvars[host]['ansible_' + cluster_interface].ipv4.address }}"
     user: rke
@@ -29,6 +29,9 @@ network:
   {{ rke_network_config | to_nice_yaml(indent=2) | indent(width=2) }}
 
 ingress:
+  provider: none
+
+monitoring:
   provider: none
 
 addons_include: {{ rke_addons_include }}
