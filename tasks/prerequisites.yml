@@ -45,6 +45,8 @@
     comment: "Rancher RKE"
     system: true
     group: rke
+    password: "{{ lookup('community.general.random_string', length=60) | password_hash('sha512')}}"
+    update_password: on_create
     groups:
       - docker
   become: true
