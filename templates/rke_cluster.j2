@@ -25,6 +25,10 @@ labels:
 
 {% endfor %}
 
+{% if rke_service_config is defined %}
+services:
+  {{ rke_service_config | to_nice_yaml(indent=2) | indent(width=2) }}
+{% endif %}
 network:
   {{ rke_network_config | to_nice_yaml(indent=2) | indent(width=2) }}
 

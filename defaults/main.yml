@@ -31,6 +31,9 @@ rke_node_roles: []
 rke_node_labels: []
 rke_force_configure: false
 
+# RKE config `services` object
+# rke_service_config:
+
 rke_network_config:
   plugin: canal
   options:
