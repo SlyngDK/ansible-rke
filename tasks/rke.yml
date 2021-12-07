@@ -1,4 +1,9 @@
 ---
+- name: Fail if some hosts has failed
+  fail:
+    msg: Some of the hosts has failed
+  when: ansible_play_hosts_all| difference(ansible_play_batch) | length > 0
+
 - name: Test ssh accesses
   ansible.builtin.shell:
     cmd: |

@@ -39,6 +39,27 @@
     system: true
   become: true
 
+- name: Check if user exist
+  getent:
+    database: passwd
+    key: rke
+    fail_key: false
+
+- name: Get rke user info
+  getent:
+    database: shadow
+    key: rke
+    fail_key: false
+    split: ':'
+  when:
+    - getent_passwd['rke'] != ""
+
+- name: Check if rke user password is set
+  set_fact:
+    update_password: 'always'
+  when:
+    - getent_shadow is defined and getent_shadow.rke[0] is defined and getent_shadow.rke[0] == "!"
+
 - name: Add rke user
   user:
     name: rke
@@ -46,7 +67,7 @@
     system: true
     group: rke
     password: "{{ lookup('community.general.random_string', length=60) | password_hash('sha512')}}"
-    update_password: on_create
+    update_password: '{{ update_password | default("on_create") }}'
     groups:
       - docker
   become: true
