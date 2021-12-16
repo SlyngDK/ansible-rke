@@ -29,6 +29,7 @@ host_interface: "{{ cluster_interface }}"
 
 rke_node_roles: []
 rke_node_labels: []
+rke_node_taints: []
 rke_force_configure: false
 
 # RKE config `services` object

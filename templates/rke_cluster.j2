@@ -18,9 +18,13 @@ nodes:
     user: rke
     role:
       {{ hostvars[host].rke_node_roles | to_nice_yaml(indent=2) | indent(width=6) }}
-    {% if hostvars[host].rke_node_labels is defined and hostvars[host].rke_node_labels | length > 0 %}
-labels:
+    {% if hostvars[host].rke_node_labels is defined and hostvars[host].rke_node_labels | length > 0 -%}
+    labels:
       {{ hostvars[host].rke_node_labels | to_nice_yaml(indent=2) | indent(width=6) }}
+    {% endif %}
+    {%- if hostvars[host].rke_node_taints is defined and hostvars[host].rke_node_taints | length > 0 +%}
+    taints:
+      {{ hostvars[host].rke_node_taints | to_nice_yaml(indent=2) | indent(width=6) }}
     {% endif %}
 
 {% endfor %}
